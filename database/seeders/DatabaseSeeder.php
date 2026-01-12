@@ -17,9 +17,19 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        \App\Models\Admin::create([
+            'name' => 'Super Admin',
+            'email' => 'admin@gmail.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+        ]);
+
+        // Initialize default prices
+        \App\Models\GoldPrice::create([
+            'karat_24' => 0,
+            'karat_22' => 0,
+            'karat_21' => 0,
+            'karat_18' => 0,
+            'silver_price' => 0,
         ]);
     }
 }
