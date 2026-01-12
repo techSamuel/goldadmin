@@ -76,21 +76,38 @@ class GoldPriceApiService
         $socksPass = \App\Models\Setting::where('key', 'socks5_pass')->value('value');
 
         if (!empty($socksProxy)) {
-            // Option 1: SOCKS5 Proxy (DataImpulse/Residential)
-            // Format: socks5h://user:pass@host:port (socks5h forces remote DNS resolution)
-            $proxyString = 'socks5h://';
-            if (!empty($socksUser) && !empty($socksPass)) {
-                $proxyString .= "{$socksUser}:{$socksPass}@";
-            }
-            $proxyString .= $socksProxy;
+            // Option 1: SOCKS5 Proxy (Raw cURL to match debug route success)
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
 
-            $response = Http::withoutVerifying()
-                ->timeout(60) // Increase timeout for proxy
-                ->withOptions(['proxy' => $proxyString])
-                ->withHeaders([
-                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-                ])
-                ->get($url);
+            // Proxy Config
+            curl_setopt($ch, CURLOPT_PROXY, $socksProxy);
+            if (!empty($socksUser) && !empty($socksPass)) {
+                curl_setopt($ch, CURLOPT_PROXYUSERPWD, "$socksUser:$socksPass");
+            }
+            curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME); // 7
+
+            $body = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($error || $httpCode >= 400) {
+                // Log error for debugging
+                \Illuminate\Support\Facades\Log::error("SOCKS5 Fail: $error | Code: $httpCode");
+                throw new \Exception("Failed to connect via Proxy. Error: $error, Code: $httpCode");
+            }
+
+            // Success - mimic Guzzle response structure if needed, or just return body
+            if (empty($body)) {
+                throw new \Exception("Empty response from Proxy");
+            }
+            return $this->processBajusHtml($body);
 
         } elseif (!empty($scraperKey)) {
             // Option 2: ScraperAPI
