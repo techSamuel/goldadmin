@@ -86,3 +86,59 @@ Route::get('/fix-storage', function () {
         return "Error: " . $e->getMessage();
     }
 });
+
+// Debug Saved Proxy (Test DB Settings)
+Route::get('debug-saved-proxy', function () {
+    $url = 'https://bajus.org/gold-price';
+
+    // Fetch from DB
+    $proxy = \App\Models\Setting::where('key', 'socks5_proxy')->value('value');
+    $user = \App\Models\Setting::where('key', 'socks5_user')->value('value');
+    $pass = \App\Models\Setting::where('key', 'socks5_pass')->value('value');
+
+    echo "<h1>SOCKS5 DB Debug</h1>";
+    echo "<strong>Target:</strong> $url<br>";
+    echo "<strong>Proxy from DB:</strong> " . ($proxy ?: 'Not Set') . "<br>";
+    echo "<strong>User from DB:</strong> " . ($user ? 'Set' : 'Not Set') . "<br>";
+
+    if (empty($proxy)) {
+        echo "<h3 style='color:red'>Proxy Not Configured in Settings</h3>";
+        return;
+    }
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    // SOCKS5 Config
+    curl_setopt($ch, CURLOPT_PROXY, $proxy);
+    if (!empty($user) && !empty($pass)) {
+        curl_setopt($ch, CURLOPT_PROXYUSERPWD, "$user:$pass");
+    }
+    curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME);
+
+    $startTime = microtime(true);
+    $output = curl_exec($ch);
+    $info = curl_getinfo($ch);
+    $error = curl_error($ch);
+    curl_close($ch);
+    $endTime = microtime(true);
+
+    echo "<strong>Time:</strong> " . round($endTime - $startTime, 2) . "s<br>";
+    echo "<strong>HTTP Code:</strong> " . $info['http_code'] . "<br>";
+
+    if ($error) {
+        echo "<h3 style='color:red'>cURL Error: $error</h3>";
+    } elseif ($info['http_code'] == 200) {
+        echo "<h3 style='color:green'>Success! DB Settings Work.</h3>";
+        echo "<textarea style='width:100%; height:200px;'>" . htmlspecialchars(substr($output, 0, 2000)) . "</textarea>";
+    } else {
+        echo "<h3 style='color:orange'>Failed (Status " . $info['http_code'] . ")</h3>";
+        echo "Likely blocked by Cloudflare.<br>";
+        echo "<textarea style='width:100%; height:200px;'>" . htmlspecialchars(substr($output, 0, 2000)) . "</textarea>";
+    }
+});
