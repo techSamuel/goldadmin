@@ -33,41 +33,15 @@ class GoldPriceApiService
             }
 
             if ($this->provider === 'metalpriceapi') {
-                return $this->getMetalPriceData();
+                return $this->fetchFromMetalPriceApi();
             }
 
-            return ['success' => false, 'message' => 'Unknown Provider'];
+            throw new \Exception('Unknown Gold Price Provider configured.');
 
         } catch (\Exception $e) {
             Log::error('Gold Price Fetch Error: ' . $e->getMessage());
             throw $e;
         }
-    }
-
-    private function getMetalPriceData()
-    {
-        if (empty($this->apiKey))
-            return null;
-
-        try {
-            $response = Http::get("https://api.metalpriceapi.com/v1/latest", [
-                'api_key' => $this->apiKey,
-                'base' => 'USD',
-                'currencies' => 'XAU,XAG'
-            ]);
-
-            if ($response->successful()) {
-                return $response->json();
-            }
-        } catch (\Exception $e) {
-            Log::error('MetalPriceAPI (Hybrid) failed: ' . $e->getMessage());
-        }
-        return null;
-    }
-
-    public function updateFromHtml($html)
-    {
-        return $this->processBajusHtml($html);
     }
 
     private function fetchFromBajus()
@@ -239,21 +213,19 @@ class GoldPriceApiService
             'traditional_silver' => $silverTraditional * $markup,
         ]);
 
-        GoldPrice::create($prices);
-
-        return ['success' => true, 'data' => $prices];
+        return $prices;
     }
 
     private function fetchFromMetalPriceApi()
     {
         if (empty($this->apiKey)) {
             Log::error('Gold API Key is missing.');
-            return ['success' => false, 'message' => 'API Key missing'];
+            throw new \Exception('API Key missing');
         }
 
         $metalData = $this->getMetalPriceData();
         if (!$metalData)
-            return ['success' => false, 'message' => 'API Request Failed'];
+            throw new \Exception('API Request Failed');
 
         $xau_usd_oz = $metalData['rates']['XAU'] ?? 0;
         $xag_usd_oz = $metalData['rates']['XAG'] ?? 0;
@@ -297,8 +269,27 @@ class GoldPriceApiService
             'traditional_silver_usd' => $silver_gram_usd * 0.80,
         ];
 
-        GoldPrice::create($prices);
+        return $prices;
+    }
 
-        return ['success' => true, 'data' => $prices];
+    private function getMetalPriceData()
+    {
+        if (empty($this->apiKey))
+            return null;
+
+        try {
+            $response = Http::get("https://api.metalpriceapi.com/v1/latest", [
+                'api_key' => $this->apiKey,
+                'base' => 'USD',
+                'currencies' => 'XAU,XAG'
+            ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+        } catch (\Exception $e) {
+            Log::error('MetalPriceAPI (Hybrid) failed: ' . $e->getMessage());
+        }
+        return null;
     }
 }
