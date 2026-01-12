@@ -74,46 +74,46 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Admin Management
         Route::resource('admins', \App\Http\Controllers\Admin\AdminManagementController::class);
-
-        // Debug ScraperAPI
-        Route::get('debug-scraper', function () {
-            $key = \App\Models\Setting::where('key', 'scraper_api_key')->value('value');
-            if (!$key)
-                return "No ScraperAPI Key found in settings.";
-
-            $url = 'https://bajus.org/gold-price';
-
-            $startTime = microtime(true);
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(90)->get('http://api.scraperapi.com', [
-                'api_key' => $key,
-                'url' => $url,
-                'premium' => 'true', // Force premium proxies
-            ]);
-            $endTime = microtime(true);
-
-            echo "<h1>ScraperAPI Debug</h1>";
-            echo "<strong>Key:</strong> " . substr($key, 0, 5) . "...<br>";
-            echo "<strong>Target:</strong> $url<br>";
-            echo "<strong>Time:</strong> " . round($endTime - $startTime, 2) . "s<br>";
-            echo "<strong>Status:</strong> " . $response->status() . "<br>";
-
-            if ($response->failed()) {
-                echo "<h3 style='color:red'>Request Failed</h3>";
-                echo "<strong>Error Body:</strong> " . $response->body();
-            } else {
-                echo "<h3 style='color:green'>Request Successful</h3>";
-                echo "<strong>Snippet:</strong> " . htmlspecialchars(substr($response->body(), 0, 1000));
-            }
-        });
-
-        // Fix Storage Link
-        Route::get('/fix-storage', function () {
-            try {
-                \Illuminate\Support\Facades\Artisan::call('storage:link');
-                return "Storage Link Created Successfully!";
-            } catch (\Exception $e) {
-                return "Error: " . $e->getMessage();
-            }
-        });
     });
+});
+
+// Debug ScraperAPI
+Route::get('debug-scraper', function () {
+    $key = \App\Models\Setting::where('key', 'scraper_api_key')->value('value');
+    if (!$key)
+        return "No ScraperAPI Key found in settings.";
+
+    $url = 'https://bajus.org/gold-price';
+
+    $startTime = microtime(true);
+    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(90)->get('http://api.scraperapi.com', [
+        'api_key' => $key,
+        'url' => $url,
+        'premium' => 'true', // Force premium proxies
+    ]);
+    $endTime = microtime(true);
+
+    echo "<h1>ScraperAPI Debug</h1>";
+    echo "<strong>Key:</strong> " . substr($key, 0, 5) . "...<br>";
+    echo "<strong>Target:</strong> $url<br>";
+    echo "<strong>Time:</strong> " . round($endTime - $startTime, 2) . "s<br>";
+    echo "<strong>Status:</strong> " . $response->status() . "<br>";
+
+    if ($response->failed()) {
+        echo "<h3 style='color:red'>Request Failed</h3>";
+        echo "<strong>Error Body:</strong> " . $response->body();
+    } else {
+        echo "<h3 style='color:green'>Request Successful</h3>";
+        echo "<strong>Snippet:</strong> " . htmlspecialchars(substr($response->body(), 0, 1000));
+    }
+});
+
+// Fix Storage Link
+Route::get('/fix-storage', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        return "Storage Link Created Successfully!";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
 });
