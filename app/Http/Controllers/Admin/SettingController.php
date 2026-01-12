@@ -36,7 +36,10 @@ class SettingController extends Controller
             'privacy_policy' => 'legal',
             'gold_api_provider' => 'automation',
             'gold_api_key' => 'automation',
-            'scraper_api_key' => 'automation', // New
+            'scraper_api_key' => 'automation',
+            'socks5_proxy' => 'automation', // New
+            'socks5_user' => 'automation',  // New
+            'socks5_pass' => 'automation',  // New
             'gold_adjustment_percentage' => 'automation',
             'gemini_api_key' => 'ai',
             'gemini_model' => 'ai',

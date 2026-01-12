@@ -69,10 +69,31 @@ class GoldPriceApiService
     private function fetchFromBajus()
     {
         $url = 'https://bajus.org/gold-price';
+        // Fetch Settings
         $scraperKey = \App\Models\Setting::where('key', 'scraper_api_key')->value('value');
+        $socksProxy = \App\Models\Setting::where('key', 'socks5_proxy')->value('value');
+        $socksUser = \App\Models\Setting::where('key', 'socks5_user')->value('value');
+        $socksPass = \App\Models\Setting::where('key', 'socks5_pass')->value('value');
 
-        if (!empty($scraperKey)) {
-            // Use ScraperAPI with Premium Proxies and 90s Timeout
+        if (!empty($socksProxy)) {
+            // Option 1: SOCKS5 Proxy (DataImpulse/Residential)
+            // Format: socks5h://user:pass@host:port (socks5h forces remote DNS resolution)
+            $proxyString = 'socks5h://';
+            if (!empty($socksUser) && !empty($socksPass)) {
+                $proxyString .= "{$socksUser}:{$socksPass}@";
+            }
+            $proxyString .= $socksProxy;
+
+            $response = Http::withoutVerifying()
+                ->timeout(60) // Increase timeout for proxy
+                ->withOptions(['proxy' => $proxyString])
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+                ])
+                ->get($url);
+
+        } elseif (!empty($scraperKey)) {
+            // Option 2: ScraperAPI
             $response = Http::withoutVerifying()
                 ->timeout(90)
                 ->get('http://api.scraperapi.com', [
@@ -82,7 +103,7 @@ class GoldPriceApiService
                     'premium' => 'true',
                 ]);
         } else {
-            // Direct Connection (Fallback)
+            // Option 3: Direct Connection (Fallback)
             $response = Http::withoutVerifying()
                 ->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'

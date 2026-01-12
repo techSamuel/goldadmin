@@ -302,9 +302,39 @@
                         value="{{ getSetting($settings, 'automation', 'scraper_api_key') }}"
                         class="w-full px-4 py-2 border rounded-lg focus:ring-blue-500 border-gray-300 font-mono text-sm"
                         placeholder="Enter ScraperAPI Key (e.g., from scraperapi.com)">
-                    <p class="text-xs text-gray-500 mt-1">Required if you want to automate Bajus scraping on a blocked
-                        server.</p>
+                    <p class="text-xs text-gray-500 mt-1">Leave empty if using SOCKS5 Proxy below.</p>
                 </div>
+
+                <!-- SOCKS5 Proxy Section -->
+                <div class="col-span-1 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="text-sm font-bold text-gray-800 mb-2">SOCKS5 Proxy (Alternative to ScraperAPI)</h4>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Proxy Host:Port</label>
+                            <input type="text" name="socks5_proxy"
+                                value="{{ getSetting($settings, 'automation', 'socks5_proxy') }}"
+                                class="w-full px-3 py-2 border rounded focus:ring-blue-500 border-gray-300 font-mono text-xs"
+                                placeholder="e.g. gw.dataimpulse.com:824">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Username</label>
+                                <input type="text" name="socks5_user"
+                                    value="{{ getSetting($settings, 'automation', 'socks5_user') }}"
+                                    class="w-full px-3 py-2 border rounded focus:ring-blue-500 border-gray-300 font-mono text-xs"
+                                    placeholder="Username">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1">Password</label>
+                                <input type="password" name="socks5_pass"
+                                    value="{{ getSetting($settings, 'automation', 'socks5_pass') }}"
+                                    class="w-full px-3 py-2 border rounded focus:ring-blue-500 border-gray-300 font-mono text-xs"
+                                    placeholder="Password">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Price Adjustment (%)</label>
                     <p class="text-xs text-gray-500 mb-2">Add a percentage markup to the raw API price (e.g., 5 for +5%).

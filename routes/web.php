@@ -77,37 +77,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 });
 
-// Debug ScraperAPI
-Route::get('debug-scraper', function () {
-    $key = \App\Models\Setting::where('key', 'scraper_api_key')->value('value');
-    if (!$key)
-        return "No ScraperAPI Key found in settings.";
-
-    $url = 'https://bajus.org/gold-price';
-
-    $startTime = microtime(true);
-    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(90)->get('http://api.scraperapi.com', [
-        'api_key' => $key,
-        'url' => $url,
-        'premium' => 'true', // Force premium proxies
-    ]);
-    $endTime = microtime(true);
-
-    echo "<h1>ScraperAPI Debug</h1>";
-    echo "<strong>Key:</strong> " . substr($key, 0, 5) . "...<br>";
-    echo "<strong>Target:</strong> $url<br>";
-    echo "<strong>Time:</strong> " . round($endTime - $startTime, 2) . "s<br>";
-    echo "<strong>Status:</strong> " . $response->status() . "<br>";
-
-    if ($response->failed()) {
-        echo "<h3 style='color:red'>Request Failed</h3>";
-        echo "<strong>Error Body:</strong> " . $response->body();
-    } else {
-        echo "<h3 style='color:green'>Request Successful</h3>";
-        echo "<strong>Snippet:</strong> " . htmlspecialchars(substr($response->body(), 0, 1000));
-    }
-});
-
 // Fix Storage Link
 Route::get('/fix-storage', function () {
     try {
@@ -115,51 +84,5 @@ Route::get('/fix-storage', function () {
         return "Storage Link Created Successfully!";
     } catch (\Exception $e) {
         return "Error: " . $e->getMessage();
-    }
-});
-
-// Debug SOCKS5 Proxy
-Route::get('debug-proxy', function () {
-    $url = 'https://bajus.org/gold-price';
-    // Credentials provided by user
-    $proxy = 'gw.dataimpulse.com:824';
-    $proxyAuth = '7be23070a0bd090aad19__cr.bd:f75b3636f4266494';
-
-    echo "<h1>SOCKS5 Proxy Debug</h1>";
-    echo "<strong>Target:</strong> $url<br>";
-    echo "<strong>Proxy:</strong> $proxy<br>";
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); // Bypass SSL for testing
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-
-    // SOCKS5 Config
-    curl_setopt($ch, CURLOPT_PROXY, $proxy);
-    curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyAuth);
-    curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME); // Resolve DNS via Proxy (Crucial for Cloudflare)
-
-    $startTime = microtime(true);
-    $output = curl_exec($ch);
-    $info = curl_getinfo($ch);
-    $error = curl_error($ch);
-    curl_close($ch);
-    $endTime = microtime(true);
-
-    echo "<strong>Time:</strong> " . round($endTime - $startTime, 2) . "s<br>";
-    echo "<strong>HTTP Code:</strong> " . $info['http_code'] . "<br>";
-
-    if ($error) {
-        echo "<h3 style='color:red'>cURL Error: $error</h3>";
-    } elseif ($info['http_code'] == 200) {
-        echo "<h3 style='color:green'>Success! Proxy Bypassed Cloudflare.</h3>";
-        echo "<textarea style='width:100%; height:200px;'>" . htmlspecialchars(substr($output, 0, 2000)) . "</textarea>";
-    } else {
-        echo "<h3 style='color:orange'>Failed (Status " . $info['http_code'] . ")</h3>";
-        echo "Likely blocked by Cloudflare. Check output below:<br>";
-        echo "<textarea style='width:100%; height:200px;'>" . htmlspecialchars(substr($output, 0, 2000)) . "</textarea>";
     }
 });
