@@ -135,10 +135,28 @@ Route::get('debug-saved-proxy', function () {
         echo "<h3 style='color:red'>cURL Error: $error</h3>";
     } elseif ($info['http_code'] == 200) {
         echo "<h3 style='color:green'>Success! DB Settings Work.</h3>";
-        echo "<textarea style='width:100%; height:200px;'>" . htmlspecialchars(substr($output, 0, 2000)) . "</textarea>";
+        echo "<textarea style='width:100%; height:600px;'>" . htmlspecialchars($output) . "</textarea>";
     } else {
         echo "<h3 style='color:orange'>Failed (Status " . $info['http_code'] . ")</h3>";
         echo "Likely blocked by Cloudflare.<br>";
         echo "<textarea style='width:100%; height:200px;'>" . htmlspecialchars(substr($output, 0, 2000)) . "</textarea>";
     }
+});
+
+// Debug Logs Viewer
+Route::get('debug-logs', function () {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) {
+        return "No log file found.";
+    }
+    // Read last 100 lines
+    $lines = file($logFile);
+    $lastLines = array_slice($lines, -100);
+
+    echo "<h1>Last 100 Log Lines</h1>";
+    echo "<pre style='background:#f4f4f4; padding:10px; border:1px solid #ccc; overflow:auto;'>";
+    foreach ($lastLines as $line) {
+        echo htmlspecialchars($line);
+    }
+    echo "</pre>";
 });

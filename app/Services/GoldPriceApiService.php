@@ -75,7 +75,10 @@ class GoldPriceApiService
         $socksUser = \App\Models\Setting::where('key', 'socks5_user')->value('value');
         $socksPass = \App\Models\Setting::where('key', 'socks5_pass')->value('value');
 
+        \Illuminate\Support\Facades\Log::info("GoldPriceApiService Settings: Proxy='" . ($socksProxy ? 'SET' : 'EMPTY') . "', User='" . ($socksUser ? 'SET' : 'EMPTY') . "'");
+
         if (!empty($socksProxy)) {
+            \Illuminate\Support\Facades\Log::info("GoldPriceApiService: Starting SOCKS5 fetch to $url via $socksProxy");
             // Option 1: SOCKS5 Proxy (Raw cURL to match debug route success)
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -96,6 +99,8 @@ class GoldPriceApiService
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
             curl_close($ch);
+
+            \Illuminate\Support\Facades\Log::info("GoldPriceApiService: cURL Result - Code: $httpCode, Error: " . ($error ?: 'None') . ", Body Length: " . strlen($body));
 
             if ($error || $httpCode >= 400) {
                 // Log error for debugging
