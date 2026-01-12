@@ -43,7 +43,7 @@ class PriceController extends Controller
         return back()->with('success', 'Prices updated successfully!');
     }
 
-    public function test(\App\Services\BajusScraperService $scraper)
+    public function test(\App\Services\GoldPriceApiService $scraper)
     {
         try {
             $prices = $scraper->fetchPrices();
@@ -60,7 +60,7 @@ class PriceController extends Controller
         }
     }
 
-    public function fetch(\App\Services\BajusScraperService $scraper)
+    public function fetch(\App\Services\GoldPriceApiService $scraper)
     {
         try {
             $prices = $scraper->fetchPrices();
