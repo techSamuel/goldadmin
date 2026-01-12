@@ -140,7 +140,7 @@ Route::get('debug-proxy', function () {
     // SOCKS5 Config
     curl_setopt($ch, CURLOPT_PROXY, $proxy);
     curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyAuth);
-    curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+    curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME); // Resolve DNS via Proxy (Crucial for Cloudflare)
 
     $startTime = microtime(true);
     $output = curl_exec($ch);
