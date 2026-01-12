@@ -105,5 +105,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 echo "<strong>Snippet:</strong> " . htmlspecialchars(substr($response->body(), 0, 1000));
             }
         });
+
+        // Fix Storage Link
+        Route::get('/fix-storage', function () {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('storage:link');
+                return "Storage Link Created Successfully!";
+            } catch (\Exception $e) {
+                return "Error: " . $e->getMessage();
+            }
+        });
     });
 });
