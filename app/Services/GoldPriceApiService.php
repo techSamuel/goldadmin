@@ -22,21 +22,25 @@ class GoldPriceApiService
 
     public function fetchAndStorePrice()
     {
+        return $this->fetchPrices();
+    }
+
+    public function fetchPrices()
+    {
         try {
-            // Check provider
             if ($this->provider === 'bajus') {
                 return $this->fetchFromBajus();
             }
 
             if ($this->provider === 'metalpriceapi') {
-                return $this->fetchFromMetalPriceApi();
+                return $this->getMetalPriceData();
             }
 
             return ['success' => false, 'message' => 'Unknown Provider'];
 
         } catch (\Exception $e) {
             Log::error('Gold Price Fetch Error: ' . $e->getMessage());
-            return ['success' => false, 'message' => $e->getMessage()];
+            throw $e;
         }
     }
 
